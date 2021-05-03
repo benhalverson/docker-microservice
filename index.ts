@@ -29,14 +29,13 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 	let { ipAddress } = req.params;
 
 	let lists: Array<FireHolFile> = await getData();
-	let flagged: boolean = false;
-	let count: number = 0;
-	let foundIn: string|null = null;
-	// NOTE: add let n for length caching, should improve performance some
-	for (let i:number = 0, n:number = lists.length; i < n; ++i) {
+	let flagged = false;
+	let count = 0;
+	let foundIn: string | null = null;
+	for (let i: number = 0, num: number = lists.length; i < num; ++i) {
 		let lines: string[] = await readData(lists[i]);
-		count = count + lines.length; 
-		if (lines.includes(ipAddress)) {
+		count = count + lines.length;
+		if (lines.includes(validate.ipv4(ipAddress))) {
 			flagged = true;
 			foundIn = `https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${lists[i].path}`;
 			break;
@@ -45,13 +44,13 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 	let telemetry = await getIPLocationInfo(ipAddress);
 	let message = `The ip address is ${ipAddress}`;
 	flagged ? (message += ` was found amoung an ipset.`) : (message += ` is ok.`);
-	
-		res.json({
-		'flagged': flagged,
-		'message': message,
-		'telemetry': telemetry,
-		'ipset': foundIn,
-		'ipsets-count': lists.length,
+
+	res.json({
+		flagged: flagged,
+		message: message,
+		telemetry: telemetry,
+		ipset: foundIn,
+		'ipsets-count': lists.length
 	});
 });
 app.listen(PORT, () => {
@@ -62,14 +61,12 @@ const getData = async () => {
 	const response = await axios.get(
 		`https://api.github.com/repos/firehol/blocklist-ipsets/git/trees/master?recursive=1`
 	);
-	// console.log('response', response.data);
+
 	const files: [] = await response.data.tree.filter((file: any) => {
 		if (file.path.endsWith('.ipset')) {
-			// console.log('file.path', file.path);
 			return file.path;
 		}
 	});
-
 	return files;
 };
 
@@ -77,12 +74,9 @@ const readData = async (file: FireHolFile) => {
 	const response = await axios.get(`https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${file.path}`);
 
 	//data here is the ip address in each file
-	// console.log('response', response.data);
-
 	const cleanedText: [] = await response.data.split('\n').filter((line: any) => {
 		return line.includes('#') !== 0;
 	});
-	// console.log('cleaned ', cleanedText);
 	return cleanedText;
 };
 
@@ -91,12 +85,13 @@ const getIPLocationInfo = async (ip: string) => {
 	let info = await geoip.lookup(ip);
 
 	if (info) {
-		// console.log('info')
-		return [{
-			'region': info.region,
-			'country': info.country,
-			'timezone': info.timezone
-		}];
+		return [
+			{
+				region: info.region,
+				country: info.country,
+				timezone: info.timezone
+			}
+		];
 	}
-	return JSON.stringify('no data found');
+	return 'no data found';
 };

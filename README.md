@@ -71,3 +71,13 @@ Invalid IP example `curl localhost:3000/asdf
 
 To use docker you need Docker installed. See docker.com
 
+
+
+## Technology used
+- Node.js 14.x LTS
+- express.js 
+- axios
+- firehol ip address list
+- Docker / Docker compose
+- Travis CI
+- AWS

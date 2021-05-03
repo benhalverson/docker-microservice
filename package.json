@@ -4,6 +4,7 @@
   "description": "ipblock list api",
   "main": "index.js",
   "scripts": {
+    "start": "ts-node index.ts",
     "dev": " ./node_modules/nodemon/bin/nodemon.js --exec ts-node index.ts"
   },
   "repository": {

@@ -1,6 +1,7 @@
 # docker-microservice
 The purpose of this API is to check an IP address against a known list of ip addresses in a Firehol blocklist
 
+[![Build Status](https://travis-ci.org/benhalverson/docker-microservice.svg?branch=main)](https://travis-ci.org/benhalverson/docker-microservice)
 
 ## Getting started
 

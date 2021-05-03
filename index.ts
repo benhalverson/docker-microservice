@@ -60,10 +60,11 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		res.json({
-			'Error': error.message
-		})	
+			Error: error.message
+		});
 	}
 });
+
 app.listen(PORT, () => {
 	console.log(`Listening on port ${PORT}`);
 });

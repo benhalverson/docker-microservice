@@ -1,0 +1,23 @@
+{
+  "name": "docker-microservice",
+  "version": "1.0.0",
+  "description": "ipblock list api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benhalverson/docker-microservice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/benhalverson/docker-microservice/issues"
+  },
+  "homepage": "https://github.com/benhalverson/docker-microservice#readme",
+  "dependencies": {
+    "typescript": "^4.2.4"
+  }
+}

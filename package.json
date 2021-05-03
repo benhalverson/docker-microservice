@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node index.ts",
-    "dev": " ./node_modules/nodemon/bin/nodemon.js --exec ts-node index.ts"
+    "dev": " ./node_modules/nodemon/bin/nodemon.js --exec ts-node index.ts",
+    "test": "echo no tests found"
   },
   "repository": {
     "type": "git",

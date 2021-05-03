@@ -24,6 +24,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 
+app.get('/healthcheck', (req, res) => {
+	res.send({
+		'message': 'api works',
+		'hostname': req.hostname
+	});
+});
+
 app.get('/:ipAddress', async (req: Request, res: Response) => {
 	let { ipAddress } = req.params;
 
@@ -51,7 +58,8 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 		}
 
 		res.json({
-			origin: req.originalUrl,
+			success: true,
+			hostname: req.hostname,
 			flagged: flagged,
 			message: message,
 			telemetry: telemetry,
@@ -60,6 +68,7 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		res.json({
+			success: false,
 			Error: error.message
 		});
 	}

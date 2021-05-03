@@ -38,10 +38,10 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 		let lists: Array<FireHolFile> = await getData();
 		let flagged = false;
 		let count = 0;
-		let foundIn: string | null = null;
+		let foundIn = '';
 		let telemetry = await getIPLocationInfo(ipAddress);
-		let message = `The ip address is ${ipAddress}`;
-		flagged ? (message += ` was found amoung an ipset.`) : (message += ` is ok.`);
+		let message = `The IP Address is ${ipAddress}`;
+		flagged ? (message += ` was found in an ipset.`) : (message += ` is ok.`);
 
 		if (validate.ipv4(ipAddress)) {
 			for (let i: number = 0, num: number = lists.length; i < num; ++i) {
@@ -60,9 +60,9 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 		res.json({
 			success: true,
 			hostname: req.hostname,
-			flagged: flagged,
-			message: message,
-			telemetry: telemetry,
+			flagged,
+			message,
+			location: telemetry,
 			ipset: foundIn,
 			'ipsets-count': lists.length
 		});

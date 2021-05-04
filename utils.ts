@@ -6,8 +6,7 @@ import { FireHolFile } from './interfaces';
 export const getData = async () => {
 	const response = await axios.get(
 		`https://api.github.com/repos/firehol/blocklist-ipsets/git/trees/master?recursive=1`
-	).catch((error: Error) => console.error('Unable to load data from api.github.com: ', error.message));
-
+	)
 	//files is each filename in the git repo that ends with .ipset
 	const files: [] = await response.data.tree.filter((file: any) => {
 		if (file.path.endsWith('.ipset')) {
@@ -20,7 +19,6 @@ export const getData = async () => {
 export const readData = async (file: FireHolFile) => {
 	const response = await axios
 		.get(`https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${file.path}`)
-		.catch((error: Error) => console.error('Unable to load data from raw.githubusercontent.com: ', error.message));
 
 	//data here is the ip address in each file
 	const cleanedText: [] = await response.data.split('\n').filter((line: any) => {

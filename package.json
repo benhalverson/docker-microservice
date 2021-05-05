@@ -13,8 +13,8 @@
     "url": "git+https://github.com/benhalverson/docker-microservice.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Ben Halverson",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/benhalverson/docker-microservice/issues"
   },

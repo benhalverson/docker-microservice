@@ -26,8 +26,8 @@ app.use(helmet());
 
 app.get('/healthcheck', (req, res) => {
 	res.send({
-		'message': 'api works',
-		'hostname': req.hostname
+		message: 'api works',
+		hostname: req.hostname
 	});
 });
 
@@ -35,14 +35,12 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 	let { ipAddress } = req.params;
 
 	try {
-		let lists: Array<FireHolFile> = await getData();
+		const lists: Array<FireHolFile> = await getData();
+		const telemetry = await getIPLocationInfo(ipAddress);
 		let flagged = false;
 		let count = 0;
 		let foundIn = '';
-		let telemetry = await getIPLocationInfo(ipAddress);
 		let message = `The IP Address is ${ipAddress}`;
-		flagged ? (message += ` was found in an ipset.`) : (message += ` is ok.`);
-
 		if (validate.ipv4(ipAddress)) {
 			for (let i: number = 0, num: number = lists.length; i < num; ++i) {
 				let lines: string[] = await readData(lists[i]);
@@ -53,6 +51,7 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 					break;
 				}
 			}
+			flagged ? (message += ` was found in an ipset.`) : (message += ` is ok.`);
 		} else {
 			throw new Error('Not a valid IP address.');
 		}

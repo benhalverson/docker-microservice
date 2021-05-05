@@ -1,8 +1,6 @@
 # docker-microservice
 The purpose of this API is to check an IP address against a known list of ip addresses in a Firehol blocklist
 
-[![Build Status](https://travis-ci.org/benhalverson/docker-microservice.svg?branch=main)](https://travis-ci.org/benhalverson/docker-microservice)
-
 ## Getting started
 
 You can either git clone the repo and install the repo locally or use docker-compose to start the app.
@@ -71,9 +69,6 @@ Invalid IP example `curl localhost:3000/asdf
 
 
 To use docker you need Docker installed. See docker.com
-
-
-
 ## Technology used
 - Node.js 14.x LTS
 - express.js 
@@ -81,4 +76,9 @@ To use docker you need Docker installed. See docker.com
 - firehol ip address list
 - Docker / Docker compose
 - Travis CI
-- AWS
+- AWS Pipelines
+- AWS Elasticbeanstalk
+
+## Demo links
+http://fireholdemo-env.eba-qge7r7r2.us-west-2.elasticbeanstalk.com/healthcheck
+http://fireholdemo-env.eba-qge7r7r2.us-west-2.elasticbeanstalk.com/:ipaddress

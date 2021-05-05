@@ -24,7 +24,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 
-app.get('/healthcheck', (req, res) => {
+app.get('/', (_req: Request, res: Response) => {
+	res.send('You need to provide an ip address to use this service')
+});
+
+app.get('/healthcheck', (req: Request, res: Response) => {
 	res.send({
 		message: 'api works',
 		hostname: req.hostname

@@ -32,13 +32,11 @@ export const getIPLocationInfo = async (ip: string)=> {
 	let info = await geoip.lookup(ip);
 
 	if (info) {
-		return [
-			{
+		return {
 				region: info.region,
 				country: info.country,
 				timezone: info.timezone
-			}
-		];
+			};
 	}
 	return 'no data found';
 };

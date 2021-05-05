@@ -15,51 +15,44 @@ You can either git clone the repo and install the repo locally or use docker-com
 - `docker-compose up`
 
 Use curl or Postman to hit the api.
-Example: `curl localhost:3000/127.0.0.1`
 
-The result will be a JSON response that looks like.
-
-Example `curl localhost:3000/98.207.144.98`
+Example `curl firehol-staging.us-west-2.elasticbeanstalk.com/98.207.144.98`
 
 ```json
 {
-    "success": true,
-    "hostname": "localhost",
-    "flagged": false,
-    "message": "The ip address is 98.207.144.98 is ok.",
-    "telemetry": [
-        {
-            "region": "CA",
-            "country": "US",
-            "timezone": "America/Los_Angeles"
-        }
-    ],
-    "ipset": null,
-    "ipsets-count": 249
+  "success": true,
+  "hostname": "firehol-staging.us-west-2.elasticbeanstalk.com",
+  "flagged": false,
+  "message": "The IP Address is 98.207.144.98 is ok.",
+  "location": {
+    "region": "CA",
+    "country": "US",
+    "timezone": "America/Los_Angeles"
+  },
+  "ipset": "",
+  "ipsets-count": 249
 }
 ```
 
-Example with a ip in one of the lists `curl localhost:3000/5.79.79.211`
+Example with a ip in one of the lists `curl firehol-staging.us-west-2.elasticbeanstalk.com/5.79.79.211`
 
 ```json
 {
-    "success": true,
-    "hostname": "localhost",
-    "flagged": true,
-    "message": "The ip address is 5.79.79.211 was found in an ipset.",
-    "telemetry": [
-        {
-            "region": "ZH",
-            "country": "NL",
-            "timezone": "Europe/Amsterdam"
-        }
-    ],
-    "ipset": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bambenek_c2.ipset",
-    "ipsets-count": 249
+  "success": true,
+  "hostname": "firehol-staging.us-west-2.elasticbeanstalk.com",
+  "flagged": true,
+  "message": "The IP Address is 5.79.79.211 was found in an ipset.",
+  "location": {
+    "region": "ZH",
+    "country": "NL",
+    "timezone": "Europe/Amsterdam"
+  },
+  "ipset": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bambenek_c2.ipset",
+  "ipsets-count": 249
 }
 ```
 
-Invalid IP example `curl localhost:3000/asdf
+Invalid IP example `curl firehol-staging.us-west-2.elasticbeanstalk.com/asdf
 ```json
 {
     "success": false,
@@ -75,10 +68,9 @@ To use docker you need Docker installed. See docker.com
 - axios
 - firehol ip address list
 - Docker / Docker compose
-- Travis CI
 - AWS Pipelines
 - AWS Elasticbeanstalk
 
 ## Demo links
-http://fireholdemo-env.eba-qge7r7r2.us-west-2.elasticbeanstalk.com/healthcheck
-http://fireholdemo-env.eba-qge7r7r2.us-west-2.elasticbeanstalk.com/:ipaddress
+http://firehol-staging.us-west-2.elasticbeanstalk.com/healthcheck
+http://firehol-staging.us-west-2.elasticbeanstalk.com/:ipaddress

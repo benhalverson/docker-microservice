@@ -18,16 +18,21 @@ if (process.env.NODE_ENV === 'development') {
 	app.use(morgan('combined'));
 }
 
+//CORs should not be * in a real app we would define which domains are allowed to use this service
 app.use(cors.default());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 
-app.get('/', (_req: Request, res: Response) => {
+/** Default address to give the user a hint on how to use this service. */
+app.get('/', (req: Request, res: Response) => {
 	res.send('You need to provide an ip address to use this service')
 });
 
+/**
+ * Basic healthcheck to see if the API service is running.
+ */
 app.get('/healthcheck', (req: Request, res: Response) => {
 	res.send({
 		message: 'api works',
@@ -35,8 +40,12 @@ app.get('/healthcheck', (req: Request, res: Response) => {
 	});
 });
 
+/**
+ * @type string
+ * @param ipaddress is an ipv4 number 
+ */
 app.get('/:ipAddress', async (req: Request, res: Response) => {
-	let { ipAddress } = req.params;
+	const { ipAddress } = req.params;
 
 	try {
 		const lists: Array<FireHolFile> = await getData();

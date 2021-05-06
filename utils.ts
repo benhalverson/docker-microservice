@@ -8,7 +8,7 @@ export const getData = async () => {
 		`https://api.github.com/repos/firehol/blocklist-ipsets/git/trees/master?recursive=1`
 	)
 	//files is each filename in the git repo that ends with .ipset
-	const files: [] = await response.data.tree.filter((file: any) => {
+	const files: [] = await response.data.tree.filter((file: FireHolFile) => {
 		if (file.path.endsWith('.ipset')) {
 			return file.path;
 		}
@@ -21,7 +21,7 @@ export const readData = async (file: FireHolFile) => {
 		.get(`https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${file.path}`)
 
 	//data here is the ip address in each file
-	const cleanedText: [] = await response.data.split('\n').filter((line: any) => {
+	const cleanedText: [] = await response.data.split('\n').filter((line: { includes: (arg0: string) => number; }) => {
 		return line.includes('#') !== 0;
 	});
 	return cleanedText;

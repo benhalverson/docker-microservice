@@ -78,7 +78,7 @@ app.get('/:ipAddress', async (req: Request, res: Response) => {
 			ipset: foundIn,
 			'ipsets-count': lists.length
 		});
-	} catch (error) {
+	} catch (error: any) {
 		res.json({
 			success: false,
 			Error: error.message

@@ -1,6 +1,5 @@
 import 'jest';
-import { getData, readData } from '../utils';
-import { FireHolFile } from '../interfaces';
+import { getData } from '../utils';
 
 // test the getData function returns some data
 describe('getData',  () => {
@@ -8,8 +7,6 @@ describe('getData',  () => {
     const data = await getData();
     expect(typeof data).toBe('object');
   });
-
-
 });
 
 

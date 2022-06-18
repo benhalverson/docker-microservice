@@ -1,5 +1,3 @@
-FROM ubuntu:latest
-
 FROM node:lts
 
 WORKDIR /app
@@ -8,8 +6,6 @@ COPY package.json .
 
 RUN npm install --force
 RUN npm install -g typescript
-RUN apt-get update -y
-RUN apt-get install -y htop
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev"]

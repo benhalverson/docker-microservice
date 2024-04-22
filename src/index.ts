@@ -2,13 +2,13 @@ import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-import { FireHolFile } from './src/interfaces';
-import { getData, getIPLocationInfo, readData } from './src/utils';
+import { FireHolFile } from './interfaces';
+import { getData, getIPLocationInfo, readData } from './utils';
 
 //module version is not available for this package
 const validate = require('ip-validator');
 
-const app =  express()
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 // basic check to determine environment
@@ -19,9 +19,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 //CORs should not be * in a real app we would define which domains are allowed to use this service
-app.use(cors({
-	origin: '*'
-}));
+app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -29,7 +27,7 @@ app.use(helmet());
 
 /** Default address to give the user a hint on how to use this service. */
 app.get('/', (_req: Request, res: Response) => {
-	res.send('You need to provide an ip address to use this service');
+	res.send('You need to provide an ip address to use this service')
 });
 
 /**

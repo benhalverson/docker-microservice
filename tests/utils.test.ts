@@ -1,5 +1,5 @@
 import 'jest';
-import { getData } from '../utils';
+import { getData } from '../src/utils';
 
 // test the getData function returns some data
 describe('getData',  () => {

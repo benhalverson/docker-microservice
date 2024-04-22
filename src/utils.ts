@@ -19,7 +19,7 @@ export const getData = async () => {
 export const readData = async (file: FireHolFile) => {
 	try {
 		const response = await axios.get(`https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${file.path}`);
-		return response.data.split('\n').reduce((acc: any, line: any) => {
+		return response.data.split('\n').reduce((acc: string[], line: string) => {
 			if (!line.startsWith('#') && line !== '' && line !== '\n') {
 				acc.push(line.trim());
 			}
@@ -30,16 +30,6 @@ export const readData = async (file: FireHolFile) => {
 		console.error('Error reading data', error);
 	}
 };
-// export const readData = async (file: FireHolFile) => {
-// 	const response = await axios
-// 		.get(`https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${file.path}`)
-
-// 	//data here is the ip address in each file
-// 	const cleanedText: [] = await response.data.split('\n').filter((line: { includes: (arg0: string) => number; }) => {
-// 		return line.includes('#') !== 0;
-// 	});
-// 	return cleanedText;
-// };
 
 // Determine location of IP Address.
 export const getIPLocationInfo = async (ip: string) => {

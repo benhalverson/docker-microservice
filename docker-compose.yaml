@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.9'
 services:
   api:
     build:
@@ -9,6 +9,8 @@ services:
     volumes:
       - /app/node_modules
       - .:/app
+    profiles:
+      - dev
   
   tests:
     build:
@@ -18,3 +20,5 @@ services:
       - /app/node_modules
       - .:/app
     command: ["npm", "run", "test"]
+    profiles:
+      - test

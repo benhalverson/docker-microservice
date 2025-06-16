@@ -6,3 +6,16 @@ export interface FireHolFile {
   size: string;
   url: string;
 }
+
+export interface BlocklistEntry {
+	cidr: string;
+	isIPv6: boolean;
+	listUrl: string;
+}
+
+export interface BlocklistCache {
+	entries: BlocklistEntry[];
+	lastUpdated: Date | null;
+	ready: boolean;
+	error?: string;
+}

@@ -1,3 +1,5 @@
+import IPCIDR from 'ip-cidr';
+
 export interface FireHolFile {
   path: string;
   mode: string;
@@ -14,8 +16,15 @@ export interface BlocklistEntry {
 }
 
 export interface BlocklistCache {
+  indexed: BlocklistIndex;
 	entries: BlocklistEntry[];
 	lastUpdated: Date | null;
 	ready: boolean;
 	error?: string;
+}
+
+export interface BlocklistIndex {
+	ipSet: Set<string>;
+	cidrList: Array<{ cidr: IPCIDR; listUrl: string }>;
+	ipv6List: Array<{ cidr: string; listUrl: string }>;
 }

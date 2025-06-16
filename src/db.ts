@@ -1,52 +1,63 @@
-import { BlocklistCache, BlocklistEntry, FireHolFile } from "./interfaces";
+import IPCIDR from "ip-cidr";
+import {
+	BlocklistCache,
+	BlocklistIndex,
+} from "./interfaces";
 import { getData, readData } from "./utils";
 
 const blocklistCache: BlocklistCache = {
-	entries: [],
+	indexed: {
+		ipSet: new Set(),
+		cidrList: [],
+		ipv6List: [],
+	},
 	lastUpdated: null,
 	ready: false,
+	entries: [],
 };
 
-// In-memory cache for blocklists
-// replace with kv store from cloudflare
 async function loadBlocklists(): Promise<void> {
 	try {
-		const lists = await getData(); // FireHolFile[]
+		const lists = await getData();
 		const seen = new Set<string>();
-		const entries: BlocklistEntry[] = [];
+		const ipSet = new Set<string>();
+		const cidrList: BlocklistIndex["cidrList"] = [];
+		const ipv6List: BlocklistIndex["ipv6List"] = [];
 
-		// Fetch and process each list in parallel (concurrently)
-		const allEntries = await Promise.all(
-			lists.map(async (list) => {
-				const lines = await readData(list);
-				return lines
-					.map((line) => line.trim())
-					.filter((line) => line && !seen.has(line))
-					.map((line) => {
-						seen.add(line);
-						return {
-							cidr: line,
-							isIPv6: line.includes(':'),
-							listUrl: `https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${list.path}`,
-						} satisfies BlocklistEntry;
-					});
-			})
-		);
+		const allLines = await Promise.all(lists.map(readData));
 
-		blocklistCache.entries = allEntries.flat();
+		lists.forEach((list, idx) => {
+			const lines = allLines[idx] || [];
+			for (const raw of lines) {
+				const line = raw.trim();
+				if (!line || seen.has(line)) continue;
+				seen.add(line);
+
+				const listUrl = `https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${list.path}`;
+				if (line.includes(":")) {
+					ipv6List.push({ cidr: line, listUrl });
+				} else if (IPCIDR.isValidCIDR(line)) {
+					cidrList.push({ cidr: new IPCIDR(line), listUrl });
+				} else {
+					ipSet.add(line);
+				}
+			}
+		});
+
+		blocklistCache.indexed = { ipSet, cidrList, ipv6List };
 		blocklistCache.lastUpdated = new Date();
 		blocklistCache.ready = true;
 		blocklistCache.error = undefined;
 
 		console.log(
-			`Blocklists loaded: ${blocklistCache.entries.length} entries from ${lists.length} lists.`
+			`Blocklists loaded: ${ipSet.size} cidr: ${cidrList.length} ipv6: ${ipv6List.length} entries from ${lists.length} lists.`
 		);
 	} catch (err) {
-		const message =
-			err instanceof Error ? err.message : 'Unknown error loading blocklists';
+		const msg =
+			err instanceof Error ? err.message : "Failed to load blocklists";
 		blocklistCache.ready = false;
-		blocklistCache.error = message;
-		console.error('Error loading blocklists:', err);
+		blocklistCache.error = msg;
+		console.error("Error loading blocklists:", err);
 	}
 }
 export { blocklistCache, loadBlocklists };

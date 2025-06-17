@@ -17,7 +17,6 @@ export interface BlocklistEntry {
 
 export interface BlocklistCache {
   indexed: BlocklistIndex;
-	entries: BlocklistEntry[];
 	lastUpdated: Date | null;
 	ready: boolean;
 	error?: string;

@@ -13,7 +13,6 @@ const blocklistCache: BlocklistCache = {
 	},
 	lastUpdated: null,
 	ready: false,
-	entries: [],
 };
 
 async function loadBlocklists(): Promise<void> {
@@ -50,14 +49,14 @@ async function loadBlocklists(): Promise<void> {
 		blocklistCache.error = undefined;
 
 		console.log(
-			`Blocklists loaded: ${ipSet.size} cidr: ${cidrList.length} ipv6: ${ipv6List.length} entries from ${lists.length} lists.`
+			`Blocklists loaded: ${ipSet.size + cidrList.length + ipv6List.length} entries from ${lists.length} lists.`
 		);
 	} catch (err) {
-		const msg =
-			err instanceof Error ? err.message : "Failed to load blocklists";
 		blocklistCache.ready = false;
-		blocklistCache.error = msg;
-		console.error("Error loading blocklists:", err);
+		blocklistCache.error =
+			err instanceof Error ? err.message : 'Failed to load blocklists';
+		console.error('Error loading blocklists:', err);
 	}
 }
+
 export { blocklistCache, loadBlocklists };

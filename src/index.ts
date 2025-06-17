@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { getIPLocationInfo } from "./utils";
 import { blocklistCache, loadBlocklists } from "./db";
+
 const IPCIDR = require("ip-cidr").default;
 const ip6 = require("ip6");
 const validate = require("ip-validator");
@@ -11,20 +12,22 @@ const validate = require("ip-validator");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 if (process.env.NODE_ENV === "development") {
 	app.use(morgan("dev"));
 } else {
 	app.use(morgan("combined"));
 }
-
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 
+// Load blocklists at startup and refresh periodically
 loadBlocklists();
-setInterval(loadBlocklists, 6 * 60 * 60 * 1000); // refresh every 6 hours
+setInterval(loadBlocklists, 6 * 60 * 60 * 1000);
 
+// Routes
 app.get("/", (_req: Request, res: Response) => {
 	res.send("You need to provide an IP address or CIDR to use this service.");
 });
@@ -42,9 +45,7 @@ app.get("/*", async (req: Request, res: Response) => {
 	if (!blocklistCache.ready) {
 		return res.status(503).json({
 			success: false,
-			Error:
-				blocklistCache.error ||
-				"Blocklists are still loading. Try again later.",
+			Error: blocklistCache.error || "Blocklists are still loading. Try again later.",
 		});
 	}
 
@@ -61,49 +62,38 @@ app.get("/*", async (req: Request, res: Response) => {
 		let flagged = false;
 		let foundIn = "";
 
-		for (const { cidr, isIPv6, listUrl } of blocklistCache.entries) {
-			const target = cidr.trim();
-
-			if (isIPv6) {
-				if (validate.ipv6(ipAddress) && ip6.isInSubnet(ipAddress, target)) {
+		// IPv6 check
+		if (isIPv6) {
+			for (const { cidr, listUrl } of blocklistCache.indexed.ipv6List) {
+				if (ip6.isInSubnet(ipAddress, cidr)) {
 					flagged = true;
 					foundIn = listUrl;
 					break;
 				}
-				continue;
 			}
+		}
 
-			// At this point, assume IPv4
-			const isTargetCIDR = IPCIDR.isValidCIDR(target);
+		// IPv4 IP match
+		if (!flagged && isIPv4 && blocklistCache.indexed.ipSet.has(ipAddress)) {
+			flagged = true;
+			foundIn = "Exact IP match (no CIDR)";
+		}
 
-			if (isCIDR && isTargetCIDR) {
+		// CIDR match (either for IP-in-CIDR or CIDR==CIDR)
+		if (!flagged) {
+			for (const { cidr, listUrl } of blocklistCache.indexed.cidrList) {
 				if (
-					new IPCIDR(ipAddress).toString() === new IPCIDR(target).toString()
+					(isCIDR && new IPCIDR(ipAddress).toString() === cidr.toString()) ||
+					(!isCIDR && cidr.contains(ipAddress))
 				) {
 					flagged = true;
 					foundIn = listUrl;
 					break;
 				}
 			}
-
-			if (!isCIDR && isTargetCIDR) {
-				if (new IPCIDR(target).contains(ipAddress)) {
-					flagged = true;
-					foundIn = listUrl;
-					break;
-				}
-			}
-
-			if (!isCIDR && !isTargetCIDR && ipAddress === target) {
-				flagged = true;
-				foundIn = listUrl;
-				break;
-			}
 		}
 
-		const message = `The IP Address ${ipAddress} ${
-			flagged ? "was found in an ipset." : "is ok."
-		}`;
+		const message = `The IP Address ${ipAddress} ${flagged ? "was found in an ipset." : "is ok."}`;
 
 		res.json({
 			success: true,
@@ -112,7 +102,10 @@ app.get("/*", async (req: Request, res: Response) => {
 			message,
 			location: telemetry,
 			ipset: foundIn,
-			"ipsets-count": blocklistCache.entries.length,
+			"ipsets-count":
+				blocklistCache.indexed.ipSet.size +
+				blocklistCache.indexed.cidrList.length +
+				blocklistCache.indexed.ipv6List.length,
 			lastUpdated: blocklistCache.lastUpdated,
 		});
 	} catch (err: unknown) {

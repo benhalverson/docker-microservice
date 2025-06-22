@@ -90,8 +90,9 @@ app.get("/*", async (req: Request, res: Response) => {
 
 	// CIDR==CIDR (for direct CIDR query)
 	if (!flagged && isCIDR) {
+	  const ipCidrInstance = new IPCIDR(ipAddress);
 	  for (const { cidr, listUrl } of blocklistCache.indexed.cidrList) {
-		if (new IPCIDR(ipAddress).toString() === cidr.toString()) {
+		if (ipCidrInstance.toString() === cidr.toString()) {
 		  flagged = true;
 		  foundIn = listUrl;
 		  break;

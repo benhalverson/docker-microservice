@@ -68,6 +68,8 @@ export const readData = async (file: FireHolFile): Promise<string[]> => {
       fetchText(`${RAW_BASE_URL}${file.path}`)
     );
 
+    console.log('text:', text);
+
     return text
       .split('\n')
       .map((line) => line.trim())
@@ -80,6 +82,7 @@ export const readData = async (file: FireHolFile): Promise<string[]> => {
 
 export const getIPLocationInfo = async (ip: string) => {
   const info = geoipLookup(ip);
+  console.log('geoipLookup:', info);
   return info
     ? {
         region: info.region,

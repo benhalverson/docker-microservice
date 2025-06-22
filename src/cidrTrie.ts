@@ -43,4 +43,3 @@ export class CIDRTrie {
   }
 }
 
-// For IPv6, use a similar approach or a library like ip6-tree for better performance.

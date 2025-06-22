@@ -2,13 +2,11 @@ import express, { Request, Response } from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
+import net from "net";
 import { getIPLocationInfo } from "./utils";
 import { blocklistCache, loadBlocklists } from "./db";
 
-const IPCIDR = require("ip-cidr").default;
-const ip6 = require("ip6");
-const validate = require("ip-validator");
-const net = require("net");
+import IPCIDR from "ip-cidr";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,7 +39,13 @@ app.get("/healthcheck", (req: Request, res: Response) => {
 });
 
 app.get("/*", async (req: Request, res: Response) => {
+
+	//127.0.0.1
+	//127.0.0.1/24
+	//2001:db8::ff00:42:8329
+
   const ipAddress = decodeURIComponent(req.path.slice(1)).trim();
+	console.log('ipAddress:', ipAddress);
 
   if (!blocklistCache.ready) {
 	return res.status(503).json({

@@ -1,89 +1,137 @@
-import express, { Request, Response } from 'express';
-import morgan from 'morgan';
-import helmet from 'helmet';
-import cors from 'cors';
-import { FireHolFile } from './interfaces';
-import { getData, getIPLocationInfo, readData } from './utils';
+import express, { Request, Response } from "express";
+import morgan from "morgan";
+import helmet from "helmet";
+import cors from "cors";
+import { getIPLocationInfo } from "./utils";
+import { blocklistCache, loadBlocklists } from "./db";
 
-//module version is not available for this package
-const validate = require('ip-validator');
+const IPCIDR = require("ip-cidr").default;
+const ip6 = require("ip6");
+const validate = require("ip-validator");
+const net = require("net");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// basic check to determine environment
-if (process.env.NODE_ENV === 'development') {
-	app.use(morgan('dev'));
+// Middleware
+if (process.env.NODE_ENV === "development") {
+	app.use(morgan("dev"));
 } else {
-	app.use(morgan('combined'));
+	app.use(morgan("combined"));
 }
-
-//CORs should not be * in a real app we would define which domains are allowed to use this service
 app.use(cors());
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(helmet());
 
-/** Default address to give the user a hint on how to use this service. */
-app.get('/', (_req: Request, res: Response) => {
-	res.send('You need to provide an ip address to use this service')
+// Load blocklists at startup and refresh periodically
+loadBlocklists();
+setInterval(loadBlocklists, 6 * 60 * 60 * 1000);
+
+// Routes
+app.get("/", (_req: Request, res: Response) => {
+  res.send("You need to provide an IP address or CIDR to use this service.");
 });
 
-/**
- * Basic healthcheck to see if the API service is running.
- */
-app.get('/healthcheck', (req: Request, res: Response) => {
-	res.send({
-		message: 'api works',
-		hostname: req.hostname
+app.get("/healthcheck", (req: Request, res: Response) => {
+  res.send({
+	message: "api works",
+	hostname: req.hostname,
+  });
+});
+
+app.get("/*", async (req: Request, res: Response) => {
+  const ipAddress = decodeURIComponent(req.path.slice(1)).trim();
+
+  if (!blocklistCache.ready) {
+	return res.status(503).json({
+	  success: false,
+	  Error: blocklistCache.error || "Blocklists are still loading. Try again later.",
 	});
-});
+  }
 
-/**
- * @type string
- * @param ipaddress is an ipv4 number 
- */
-app.get('/:ipAddress', async (req: Request, res: Response) => {
-	const { ipAddress } = req.params;
+  try {
+	const isCIDR = IPCIDR.isValidCIDR(ipAddress);
+	const netType = net.isIP(ipAddress); // 0 = invalid, 4 = IPv4, 6 = IPv6
+	const isIPv4 = netType === 4;
+	const isIPv6 = netType === 6;
 
-	try {
-		const lists: Array<FireHolFile> = await getData();
-		const telemetry = await getIPLocationInfo(ipAddress);
-		let flagged = false;
-		let count = 0;
-		let foundIn = '';
-		let message = `The IP Address is ${ipAddress}`;
-		if (validate.ipv4(ipAddress)) {
-			for (let i: number = 0, num: number = lists.length; i < num; ++i) {
-				let lines: string[] = await readData(lists[i]);
-				count = count + lines.length;
-				if (lines.includes(ipAddress)) {
-					flagged = true;
-					foundIn = `https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/${lists[i].path}`;
-					break;
-				}
-			}
-			flagged ? (message += ` was found in an ipset.`) : (message += ` is ok.`);
-		} else {
-			throw new Error('Not a valid IP address.');
-		}
-
-		res.json({
-			success: true,
-			hostname: req.hostname,
-			flagged,
-			message,
-			location: telemetry,
-			ipset: foundIn,
-			'ipsets-count': lists.length
-		});
-	} catch (error: any) {
-		res.json({
-			success: false,
-			Error: error.message
-		});
+	if (!(isCIDR || isIPv4 || isIPv6)) {
+	  throw new Error("Not a valid IP address or CIDR.");
 	}
+
+	const telemetry = await getIPLocationInfo(ipAddress);
+	let flagged = false;
+	let foundIn = "";
+
+	// IPv6 check (trie)
+	if (isIPv6 && blocklistCache.ipv6Trie) {
+	  const match = blocklistCache.ipv6Trie.lookup(ipAddress);
+	  if (match) {
+		flagged = true;
+		foundIn = match;
+	  }
+	}
+
+	// IPv4 IP match
+	if (!flagged && isIPv4 && blocklistCache.indexed.ipSet.has(ipAddress)) {
+	  flagged = true;
+	  foundIn = "Exact IP match (no CIDR)";
+	}
+
+	// CIDR match (trie)
+	if (!flagged && isIPv4 && blocklistCache.cidrTrie) {
+	  const match = blocklistCache.cidrTrie.lookup(ipAddress);
+	  if (match) {
+		flagged = true;
+		foundIn = match;
+	  }
+	}
+
+	// CIDR==CIDR (for direct CIDR query)
+	if (!flagged && isCIDR) {
+	  const ipCidrInstance = new IPCIDR(ipAddress);
+	  for (const { cidr, listUrl } of blocklistCache.indexed.cidrList) {
+		if (ipCidrInstance.toString() === cidr.toString()) {
+		  flagged = true;
+		  foundIn = listUrl;
+		  break;
+		}
+	  }
+	  if (!flagged) {
+		for (const { cidr, listUrl } of blocklistCache.indexed.ipv6List) {
+		  if (ipAddress === cidr) {
+			flagged = true;
+			foundIn = listUrl;
+			break;
+		  }
+		}
+	  }
+	}
+
+	const message = `The IP Address ${ipAddress} ${flagged ? "was found in an ipset." : "is ok."}`;
+
+	res.json({
+	  success: true,
+	  hostname: req.hostname,
+	  flagged,
+	  message,
+	  location: telemetry,
+	  ipset: foundIn,
+	  "ipsets-count":
+		blocklistCache.indexed.ipSet.size +
+		blocklistCache.indexed.cidrList.length +
+		blocklistCache.indexed.ipv6List.length,
+	  lastUpdated: blocklistCache.lastUpdated,
+	});
+  } catch (err: unknown) {
+	if (err instanceof Error) {
+	  res.json({
+		success: false,
+		error: err.message,
+	  });
+	}
+  }
 });
 
 app.listen(PORT, () => {

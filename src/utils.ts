@@ -22,7 +22,7 @@ async function fetchJson<T>(url: string, retries = 3): Promise<T> {
       if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
       return await res.json();
     } catch (err: any) {
-      if (err.code === 'EAI_AGAIN' && i < retries - 1) {
+      if ((err.name === 'TypeError' || /network/i.test(err.message)) && i < retries - 1) {
         await new Promise((res) => setTimeout(res, 1000));
       } else {
         throw err;

@@ -23,7 +23,7 @@
   "homepage": "https://github.com/benhalverson/docker-microservice#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "express": "^4.22.1",
     "geoip-lite": "^1.4.10",
     "helmet": "^7.1.0",
     "ip-cidr": "^4.0.2",
